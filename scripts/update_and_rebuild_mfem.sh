@@ -132,6 +132,7 @@ if [ ! -d axom-repo ]; then
 fi
 
 AXOM_REPO_DIR="$(get_realpath "${SCRIPT_DIR}"/../framework/contrib/axom-repo)"
+AXOM_DIR="$(get_realpath "${SCRIPT_DIR}"/../framework/contrib/axom)"
 cd $AXOM_REPO_DIR
 python3 ./config-build.py -hc ../mfem/miniapps/tribol/axom-gcc-notpl.cmake -bt Debug -DCMAKE_INSTALL_PREFIX=../../axom -DCONDUIT_DIR=$CONDUIT_DIR
 cd build-axom-gcc-notpl-debug && make -j${MOOSE_JOBS:-4} install
@@ -141,9 +142,11 @@ cd "$(get_realpath "${SCRIPT_DIR}"/../framework/contrib/)"
 
 # clone repo if not present
 if [ ! -d tribol-repo ]; then
-  git clone --recursive https://github.com/LLNL/Tribol.git tribol-repo
+  git clone --recursive https://github.com/sean-baccas/Tribol.git tribol-repo
 fi
 
+TRIBOL_REPO_DIR="$(get_realpath "${SCRIPT_DIR}"/../framework/contrib/tribol-repo)"
+TRIBOL_DIR="$(get_realpath "${SCRIPT_DIR}"/../framework/contrib/tribol)"
 cd tribol-repo
 python3 ./config-build.py -hc ../mfem/miniapps/tribol/tribol-gcc-basictpl.cmake -bt Debug -DCMAKE_INSTALL_PREFIX=../../tribol -DMFEM_DIR=$MFEM_DIR
 cd build-tribol-gcc-basictpl-debug && make -j${MOOSE_JOBS:-4} install

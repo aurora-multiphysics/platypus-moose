@@ -15,6 +15,7 @@
 #include "libmesh/restore_warnings.h"
 #include "MFEMIntegratedBC.h"
 #include "MFEMEssentialBC.h"
+#include "MFEMContactBC.h"
 #include "MFEMContainers.h"
 #include "MFEMKernel.h"
 #include "MFEMMixedBilinearFormKernel.h"
@@ -44,7 +45,9 @@ public:
   // Add kernels.
   virtual void AddKernel(std::shared_ptr<MFEMKernel> kernel);
   virtual void AddIntegratedBC(std::shared_ptr<MFEMIntegratedBC> kernel);
+  virtual void AddContactBC(std::shared_ptr<MFEMContactBC> bc);
   virtual void AddEssentialBC(std::shared_ptr<MFEMEssentialBC> bc);
+  virtual void ApplyContactBCs();
   virtual void ApplyEssentialBCs();
 
   // Build forms
@@ -163,6 +166,7 @@ protected:
       Moose::MFEM::NamedFieldsMap<std::vector<std::shared_ptr<MFEMIntegratedBC>>>>
       _integrated_bc_map;
   Moose::MFEM::NamedFieldsMap<std::vector<std::shared_ptr<MFEMEssentialBC>>> _essential_bc_map;
+  Moose::MFEM::NamedFieldsMap<std::vector<std::shared_ptr<MFEMContactBC>>>   _contact_bc_map;
 
   mutable mfem::OperatorHandle _jacobian;
 

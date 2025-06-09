@@ -161,6 +161,8 @@ ifeq ($(ENABLE_MFEM),true)
 	  endif
 
     libmesh_LDFLAGS += -L$(MFEM_DIR)/lib -lmfem -lmfem-common
+    libmesh_LDFLAGS += -L$(TRIBOL_DIR)/lib -ltribol -ltribol_shared -lredecomp
+    libmesh_LDFLAGS += -L$(AXOM_DIR)/lib -laxom_core -laxom_lumberjack -laxom_mint -laxom_mir -laxom_multimat -laxom_quest -laxom_sina -laxom_slam -laxom_slic
 
   else
     filtered_goals := $(filter $(SKIP_EXTERNAL_LIBRARY_CHECK_TARGETS),$(MAKECMDGOALS))
