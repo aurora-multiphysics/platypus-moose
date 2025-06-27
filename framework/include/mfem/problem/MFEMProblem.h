@@ -212,6 +212,11 @@ public:
   std::optional<std::reference_wrapper<mfem::ParGridFunction const>>
   getMeshDisplacementGridFunction();
 
+  /**
+   * Returns a reference to the coords
+  */
+  mfem::ParGridFunction& getCoords();
+
 protected:
   MFEMProblemData _problem_data;
 };

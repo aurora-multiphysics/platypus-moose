@@ -21,45 +21,35 @@ MFEMHypreDiagScale::validParams()
 }
 
 MFEMHypreDiagScale::MFEMHypreDiagScale(const InputParameters & parameters)
-  : MFEMSolverBase(parameters),
-    _mfem_fespace(isParamSetByUser("fespace") ? getUserObject<MFEMFESpace>("fespace").getFESpace()
-                                              : nullptr)
-    // _strength_threshold(getParam<mfem::real_t>("strength_threshold"))
+  : MFEMSolverBase(parameters)//, _mfem_fespace(getUserObject<MFEMFESpace>("fespace"))
 {
+  mfem::Hypre::Init();
   constructSolver(parameters);
 }
 
 void
-MFEMHypreDiagScale::constructSolver(const InputParameters & parameters)
+MFEMHypreDiagScale::constructSolver(const InputParameters & /*parameters*/)
 {
   // this is supposed to be constructed with a hyprepar matrix
-  auto solver = std::make_shared<mfem::HypreDiagScale>();
+  auto solver = std::make_unique<mfem::HypreDiagScale>();
 
   // solver->SetTol(getParam<double>("l_tol"));
   // solver->SetMaxIter(getParam<int>("l_max_its"));
   // solver->SetPrintLevel(getParam<int>("print_level"));
   // solver->SetStrengthThresh(_strength_threshold);
 
-  if (_preconditioner)
-    mooseError("This can only be used as preconditioner");
+  // if (preconditioner)
+  //   setPreconditioner(*solver);
 
-  _solver = solver;
+  _solver = std::move(solver);
 }
 
 void
-MFEMHypreDiagScale::updateSolver(mfem::ParBilinearForm & a, mfem::Array<int> & tdofs)
+MFEMHypreDiagScale::updateSolver(mfem::ParBilinearForm & /*a*/, mfem::Array<int> & /*tdofs*/)
 {
-
   if (_lor)
     mooseError("LOR solver not configured yet");
 
-  if (_preconditioner)
-  {
-    _preconditioner->updateSolver(a, tdofs);
-    auto solver = std::dynamic_pointer_cast<mfem::HypreDiagScale>(_solver);
-    // solver->SetPreconditioner(*_preconditioner->getSolver());
-    _solver = solver;
-  }
 }
 
 #endif

@@ -504,4 +504,14 @@ MFEMProblem::addTransfer(const std::string & transfer_name,
     FEProblemBase::addTransfer(transfer_name, name, parameters);
 }
 
+mfem::ParGridFunction& 
+MFEMProblem::getCoords()
+{
+  getProblemData().pmesh->EnsureNodes(); // why not
+  mfem::ParGridFunction* coords = dynamic_cast<mfem::ParGridFunction*>( getProblemData().pmesh->GetNodes() );
+  if ( !coords ) MFEM_ABORT("Failed to cast from GridFunction to ParGridFunction");
+  return *coords;
+}
+
+
 #endif

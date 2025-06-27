@@ -2,7 +2,7 @@
   type = MFEMMesh
   file = ../mesh/two-hex.mesh
   dim = 3
-  parallel_refine = 2
+  uniform_refine = 2
   displacement = 'displacement'
 []
 
@@ -15,6 +15,7 @@
     type = MFEMVectorFESpace
     fec_type = H1
     fec_order = FIRST
+    ordering = NODES
   []
 []
 
@@ -36,7 +37,7 @@
 
 [FunctorMaterials]
   [Rigidium]
-    type = MFEMGenericConstantFunctorMaterial
+    type = MFEMGenericFunctorMaterial
     prop_names = 'lambda mu'
     prop_values = '50.0 50.0'
     block = '1 2'
@@ -47,6 +48,12 @@
   [interface]
     type = MFEMContactBC
     variable = displacement
+  []
+  [dirichlet]
+    type = MFEMVectorDirichletBC
+    variable = displacement
+    boundary = "1 2 3 6"
+    vector_coefficient = '0.0 0.0 0.0'
   []
 []
 
@@ -65,6 +72,14 @@
 [Preconditioner]
   [hyprediag]
     type = MFEMHypreDiagScale
+  []
+[]
+
+[Outputs]
+  [ParaViewDataCollection]
+    type = MFEMParaViewDataCollection
+    file_base = OutputData/Contact
+    vtk_format = ASCII
   []
 []
 

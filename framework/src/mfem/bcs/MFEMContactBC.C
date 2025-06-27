@@ -15,9 +15,8 @@ MFEMContactBC::MFEMContactBC(const InputParameters & parameters)
 {
 }
 
-// paste in something from the unit test!
 void
-MFEMContactBC::ApplyBC(mfem::GridFunction & gridfunc, mfem::Mesh & mesh_)
+MFEMContactBC::ApplyBC(mfem::GridFunction & /*gridfunc*/)
 {
 
 }

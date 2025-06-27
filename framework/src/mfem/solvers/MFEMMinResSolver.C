@@ -20,29 +20,21 @@ MFEMMinResSolver::validParams()
 }
 
 MFEMMinResSolver::MFEMMinResSolver(const InputParameters & parameters)
-  : MFEMSolverBase(parameters),
-    _preconditioner(isParamSetByUser("preconditioner")
-                        ? getMFEMProblem().getProblemData().jacobian_preconditioner
-                        : nullptr)
-
+  : MFEMSolverBase(parameters)
 {
   constructSolver(parameters);
 }
 
 void
-MFEMMinResSolver::constructSolver(const InputParameters & parameters)
+MFEMMinResSolver::constructSolver(const InputParameters & /*parameters*/)
 {
-  auto solver = std::make_shared<mfem::MINRESSolver>( getMFEMProblem().mesh().getMFEMParMesh().GetComm() );
+  auto solver = std::make_unique<mfem::MINRESSolver>( getMFEMProblem().mesh().getMFEMParMesh().GetComm() );
 
   solver->SetRelTol(getParam<double>("rel_tol"));
   solver->SetMaxIter(getParam<int>("l_max_its"));
+  solver->SetPrintLevel(2);
 
-  auto preconditioner = std::dynamic_pointer_cast<mfem::Solver>(_preconditioner);
-
-  if (preconditioner)
-    solver->SetPreconditioner(*preconditioner);
-
-  _solver = solver;
+  _solver = std::move(solver);
 }
 
 void
@@ -55,9 +47,7 @@ MFEMMinResSolver::updateSolver(mfem::ParBilinearForm & a, mfem::Array<int> & tdo
   if (_preconditioner)
   {
     _preconditioner->updateSolver(a, tdofs);
-    auto solver = std::dynamic_pointer_cast<mfem::MINRESSolver>(_solver);
-    solver->SetPreconditioner(*_preconditioner->getSolver());
-    _solver = solver;
+    setPreconditioner(static_cast<mfem::MINRESSolver &>(*_solver));
   }
 }
 

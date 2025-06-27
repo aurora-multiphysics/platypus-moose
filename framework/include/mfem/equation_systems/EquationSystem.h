@@ -15,7 +15,6 @@
 #include "libmesh/restore_warnings.h"
 #include "MFEMIntegratedBC.h"
 #include "MFEMEssentialBC.h"
-#include "MFEMContactBC.h"
 #include "MFEMContainers.h"
 #include "MFEMKernel.h"
 #include "MFEMMixedBilinearFormKernel.h"
@@ -45,9 +44,7 @@ public:
   // Add kernels.
   virtual void AddKernel(std::shared_ptr<MFEMKernel> kernel);
   virtual void AddIntegratedBC(std::shared_ptr<MFEMIntegratedBC> kernel);
-  virtual void AddContactBC(std::shared_ptr<MFEMContactBC> bc);
   virtual void AddEssentialBC(std::shared_ptr<MFEMEssentialBC> bc);
-  virtual void ApplyContactBCs();
   virtual void ApplyEssentialBCs();
 
   // Build forms
@@ -88,6 +85,16 @@ public:
 
   const std::vector<std::string> & TrialVarNames() const { return _trial_var_names; }
   const std::vector<std::string> & TestVarNames() const { return _test_var_names; }
+
+  // Wrapper around tribol::getMfemPressure
+  mfem::ParGridFunction& getMfemPressure(int coupling_scheme_id=0);
+  
+  // Ugly. But we want to modify sizes of e.g. _h_blocks when we are solving a
+  // contact problem. Later we will tidy this up and make sure it's set from
+  // the input file in some way.
+  bool _use_contact = true;
+
+  bool UseContact() const { return _use_contact; }
 
 protected:
   // Deletes the HypreParMatrix associated with any pointer stored in _h_blocks,
@@ -166,7 +173,6 @@ protected:
       Moose::MFEM::NamedFieldsMap<std::vector<std::shared_ptr<MFEMIntegratedBC>>>>
       _integrated_bc_map;
   Moose::MFEM::NamedFieldsMap<std::vector<std::shared_ptr<MFEMEssentialBC>>> _essential_bc_map;
-  Moose::MFEM::NamedFieldsMap<std::vector<std::shared_ptr<MFEMContactBC>>>   _contact_bc_map;
 
   mutable mfem::OperatorHandle _jacobian;
 
