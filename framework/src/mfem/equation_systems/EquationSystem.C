@@ -396,7 +396,7 @@ EquationSystem::BuildMixedBilinearForms()
 }
 
 void
-EquationSystem::BuildEquationSystem()
+EquationSystem::BuildEquationSystem(Moose::MFEM::GridFunctions & gridfunctions, mfem::Array<int> & btoffsets)
 {
   BuildBilinearForms();
   BuildMixedBilinearForms();

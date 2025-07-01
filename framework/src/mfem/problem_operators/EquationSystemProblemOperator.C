@@ -25,7 +25,7 @@ EquationSystemProblemOperator::Init(mfem::BlockVector & X)
 {
   ProblemOperator::Init(X);
 
-  GetEquationSystem()->BuildEquationSystem();
+  GetEquationSystem()->BuildEquationSystem(_problem.gridfunctions, _block_true_offsets);
 }
 
 void
