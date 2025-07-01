@@ -59,13 +59,15 @@ public:
   // Form linear system, with essential boundary conditions accounted for
   virtual void FormLinearSystem(mfem::OperatorHandle & op,
                                 mfem::BlockVector & trueX,
-                                mfem::BlockVector & trueRHS);
+                                mfem::BlockVector & trueRHS) const;
 
   virtual void
-  FormSystem(mfem::OperatorHandle & op, mfem::BlockVector & trueX, mfem::BlockVector & trueRHS);
+  FormSystem(mfem::OperatorHandle & op, mfem::BlockVector & trueX, mfem::BlockVector & trueRHS) const;
   virtual void FormLegacySystem(mfem::OperatorHandle & op,
                                 mfem::BlockVector & trueX,
-                                mfem::BlockVector & trueRHS);
+                                mfem::BlockVector & trueRHS) const;
+
+   void UpdateJacobian() const;
 
   // Build linear system, with essential boundary conditions accounted for
   virtual void BuildJacobian(mfem::BlockVector & trueX, mfem::BlockVector & trueRHS);
@@ -92,7 +94,7 @@ protected:
   // Deletes the HypreParMatrix associated with any pointer stored in _h_blocks,
   // and then proceeds to delete all dynamically allocated memory for _h_blocks
   // itself, resetting all dimensions to zero.
-  void DeleteAllBlocks();
+  void DeleteAllBlocks() const;
 
   bool VectorContainsName(const std::vector<std::string> & the_vector,
                           const std::string & name) const;
@@ -155,7 +157,7 @@ protected:
   std::vector<std::unique_ptr<mfem::ParGridFunction>> _xs;
   std::vector<std::unique_ptr<mfem::ParGridFunction>> _dxdts;
 
-  mfem::Array2D<const mfem::HypreParMatrix *> _h_blocks;
+  mutable mfem::Array2D<const mfem::HypreParMatrix *> _h_blocks;
 
   // Arrays to store kernels to act on each component of weak form. Named
   // according to test variable
@@ -289,10 +291,10 @@ public:
   virtual void BuildBilinearForms() override;
   virtual void FormLegacySystem(mfem::OperatorHandle & op,
                                 mfem::BlockVector & truedXdt,
-                                mfem::BlockVector & trueRHS) override;
+                                mfem::BlockVector & trueRHS) const override;
   virtual void FormSystem(mfem::OperatorHandle & op,
                           mfem::BlockVector & truedXdt,
-                          mfem::BlockVector & trueRHS) override;
+                          mfem::BlockVector & trueRHS) const override;
 
   const std::vector<std::string> & TrialVarTimeDerivativeNames() const;
 
