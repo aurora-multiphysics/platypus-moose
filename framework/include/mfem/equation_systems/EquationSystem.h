@@ -295,6 +295,9 @@ public:
   virtual void FormSystem(mfem::OperatorHandle & op,
                           mfem::BlockVector & truedXdt,
                           mfem::BlockVector & trueRHS) const override;
+  
+  /// Compute residual y = Mu
+  void Mult(const mfem::Vector & u, mfem::Vector & residual) const override;
 
   const std::vector<std::string> & TrialVarTimeDerivativeNames() const;
 

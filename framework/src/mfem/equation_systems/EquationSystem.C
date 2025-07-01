@@ -362,6 +362,34 @@ EquationSystem::Mult(const mfem::Vector & x, mfem::Vector & residual) const
   residual -= _trueBlockRHS;
 }
 
+
+void
+TimeDependentEquationSystem::Mult(const mfem::Vector & dXdt, mfem::Vector & residual) const
+{
+  CopyVec(dXdt,_trueBlockdXdt);
+  for (int i = 0; i < _trial_var_names.size(); i++)
+  {
+    auto & trial_var_name = _trial_var_names.at(i);
+    applyDirchValues(*(_dxdts.at(i)), _trueBlockdXdt.GetBlock(i), _ess_tdof_lists.at(i));
+    _gfuncs->Get(trial_var_name)->Distribute(&(_trueBlockdXdt.GetBlock(i)));
+  }
+
+  for (int i = 0; i < _test_var_names.size(); i++)
+  {
+    auto & test_var_name = _test_var_names.at(i);
+    auto lf = _lfs.GetShared(test_var_name);
+    lf->Assemble();
+    lf->ParallelAssemble(_trueBlockRHS.GetBlock(i));
+  }
+
+  UpdateJacobian();
+  FormLinearSystem(_jacobian,  _trueBlockdXdt,  _trueBlockRHS);
+  _jacobian->Mult(_trueBlockdXdt, residual);
+  dXdt.HostRead();
+  residual.HostRead();
+  residual -= _trueBlockRHS;
+}
+
 mfem::Operator &
 EquationSystem::GetGradient(const mfem::Vector &) const
 {
@@ -633,14 +661,10 @@ TimeDependentEquationSystem::FormLegacySystem(mfem::OperatorHandle & op,
     blf->AddMult(*_trial_variables.Get(test_var_name), *lf, -1.0);
     // }
     mfem::Vector aux_x, aux_rhs;
-    // Update solution values on Dirichlet values to be in terms of du/dt instead of u
-    mfem::Vector bc_x = *(_xs.at(i).get());
-    bc_x -= *_trial_variables.Get(test_var_name);
-    bc_x /= _dt_coef.constant;
 
     // Form linear system for operator acting on vector of du/dt
     mfem::HypreParMatrix * aux_a = new mfem::HypreParMatrix;
-    td_blf->FormLinearSystem(_ess_tdof_lists.at(i), bc_x, *lf, *aux_a, aux_x, aux_rhs);
+    td_blf->FormLinearSystem(_ess_tdof_lists.at(i), *(_dxdts.at(i)), *lf, *aux_a, aux_x, aux_rhs);
     _h_blocks(i, i) = aux_a;
     truedXdt.GetBlock(i) = aux_x;
     trueRHS.GetBlock(i) = aux_rhs;
@@ -671,14 +695,10 @@ TimeDependentEquationSystem::FormSystem(mfem::OperatorHandle & op,
   *lf -= lf_prev;
   // }
   mfem::Vector aux_x, aux_rhs;
-  // Update solution values on Dirichlet values to be in terms of du/dt instead of u
-  mfem::Vector bc_x = *(_xs.at(0).get());
-  bc_x -= *_trial_variables.Get(test_var_name);
-  bc_x /= _dt_coef.constant;
 
   // Form linear system for operator acting on vector of du/dt
   mfem::OperatorPtr aux_a;
-  td_blf->FormLinearSystem(_ess_tdof_lists.at(0), bc_x, *lf, aux_a, aux_x, aux_rhs);
+  td_blf->FormLinearSystem(_ess_tdof_lists.at(0), *(_dxdts.at(0)), *lf, aux_a, aux_x, aux_rhs);
 
   truedXdt.GetBlock(0) = aux_x;
   trueRHS.GetBlock(0) = aux_rhs;
