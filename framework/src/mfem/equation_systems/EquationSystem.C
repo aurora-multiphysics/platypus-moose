@@ -261,6 +261,27 @@ EquationSystem::BuildJacobian(mfem::BlockVector & trueX, mfem::BlockVector & tru
   FormLinearSystem(_jacobian, trueX, trueRHS);
 }
 
+void CopyVec(const mfem::Vector & x, mfem::Vector & y){ y = x;}
+
+void
+EquationSystem::UpdateBdrState(const mfem::real_t & dt, const mfem::Vector & xold)
+{
+  //Update the old vector
+  CopyVec(xold, _trueBlockX_Old);
+
+  //Update the xs boundary conditions
+  ApplyEssentialBCs();
+
+  // Update the dxdts boundary conditions
+  for (int i = 0; i < _test_var_names.size(); i++)
+  {
+    auto & test_var_name = _trial_var_names.at(i);
+    CopyVec( *(_xs.at(i)), *(_dxdts.at(i)) );
+    *(_dxdts.at(i)) -= _trueBlockX_Old.GetBlock(i);
+    *(_dxdts.at(i)) /= dt;
+  }
+};
+
 void
 EquationSystem::Mult(const mfem::Vector & x, mfem::Vector & residual) const
 {
@@ -398,6 +419,12 @@ EquationSystem::BuildMixedBilinearForms()
 void
 EquationSystem::BuildEquationSystem(Moose::MFEM::GridFunctions & gridfunctions, mfem::Array<int> & btoffsets)
 {
+  _gfuncs = &gridfunctions;
+  _block_true_offsets = &btoffsets;
+  _trueBlockX.Update(*_block_true_offsets);
+  _trueBlockRHS.Update(*_block_true_offsets);
+  _trueBlockdXdt.Update(*_block_true_offsets);
+  _trueBlockX_Old.Update(*_block_true_offsets);
   BuildBilinearForms();
   BuildMixedBilinearForms();
   BuildLinearForms();

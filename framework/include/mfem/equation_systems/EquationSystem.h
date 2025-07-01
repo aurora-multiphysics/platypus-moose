@@ -86,6 +86,8 @@ public:
   const std::vector<std::string> & TrialVarNames() const { return _trial_var_names; }
   const std::vector<std::string> & TestVarNames() const { return _test_var_names; }
 
+  void UpdateBdrState(const mfem::real_t & dt, const mfem::Vector & xold);
+
 protected:
   // Deletes the HypreParMatrix associated with any pointer stored in _h_blocks,
   // and then proceeds to delete all dynamically allocated memory for _h_blocks
@@ -165,8 +167,10 @@ protected:
   Moose::MFEM::NamedFieldsMap<std::vector<std::shared_ptr<MFEMEssentialBC>>> _essential_bc_map;
 
   mutable mfem::OperatorHandle _jacobian;
-
+  mutable mfem::BlockVector _trueBlockX, _trueBlockRHS, _trueBlockdXdt, _trueBlockX_Old;
   mfem::AssemblyLevel _assembly_level;
+  Moose::MFEM::GridFunctions * _gfuncs;
+  mfem::Array<int> * _block_true_offsets;
 };
 
 template <class FormType>
