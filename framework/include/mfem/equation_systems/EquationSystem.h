@@ -81,6 +81,8 @@ public:
   virtual void RecoverFEMSolution(mfem::BlockVector & trueX,
                                   Moose::MFEM::GridFunctions & gridfunctions);
 
+  void Update_timeVars(const mfem::real_t & dt, const mfem::real_t & time, const mfem::Vector & X_Old);
+
   std::vector<mfem::Array<int>> _ess_tdof_lists;
 
   const std::vector<std::string> & TrialVarNames() const { return _trial_var_names; }
