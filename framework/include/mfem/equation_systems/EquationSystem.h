@@ -165,8 +165,12 @@ protected:
   Moose::MFEM::NamedFieldsMap<std::vector<std::shared_ptr<MFEMEssentialBC>>> _essential_bc_map;
 
   mutable mfem::OperatorHandle _jacobian;
-
+  mutable mfem::Vector _trueRHS;
+  mutable mfem::BlockVector _trueBlockX, _trueBlockRHS, _trueBlockdXdt, _trueBlockX_Old;
   mfem::AssemblyLevel _assembly_level;
+  Moose::MFEM::GridFunctions * _gfuncs;
+  mfem::Array<int> * _block_true_offsets;
+  mfem::Array<int> empty_tdof;
 };
 
 template <class FormType>
