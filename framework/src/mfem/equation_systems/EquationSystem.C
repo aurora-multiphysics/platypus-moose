@@ -292,7 +292,7 @@ EquationSystem::Update_timeVars(const mfem::real_t & dt, const mfem::real_t & ti
   CopyVec(X_Old, _trueBlockX_Old);
 
   //Update the xs boundary conditions
-
+  ApplyEssentialBCs();
 
   // Update the dxdts boundary conditions
   for (int i = 0; i < _test_var_names.size(); i++)
@@ -584,13 +584,13 @@ TimeDependentEquationSystem::FormLegacySystem(mfem::OperatorHandle & op,
     // }
     mfem::Vector aux_x, aux_rhs;
     // Update solution values on Dirichlet values to be in terms of du/dt instead of u
-    mfem::Vector bc_x = *(_xs.at(i).get());
-    bc_x -= *_trial_variables.Get(test_var_name);
-    bc_x /= _dt_coef.constant;
+    //mfem::Vector bc_x = *(_xs.at(i).get());
+    //bc_x -= *_trial_variables.Get(test_var_name);
+    //bc_x /= _dt_coef.constant;
 
     // Form linear system for operator acting on vector of du/dt
     mfem::HypreParMatrix * aux_a = new mfem::HypreParMatrix;
-    td_blf->FormLinearSystem(_ess_tdof_lists.at(i), bc_x, *lf, *aux_a, aux_x, aux_rhs);
+    td_blf->FormLinearSystem(_ess_tdof_lists.at(i), *(_dxdts.at(i)), *lf, *aux_a, aux_x, aux_rhs);
     _h_blocks(i, i) = aux_a;
     truedXdt.GetBlock(i) = aux_x;
     trueRHS.GetBlock(i) = aux_rhs;
@@ -622,13 +622,13 @@ TimeDependentEquationSystem::FormSystem(mfem::OperatorHandle & op,
   // }
   mfem::Vector aux_x, aux_rhs;
   // Update solution values on Dirichlet values to be in terms of du/dt instead of u
-  mfem::Vector bc_x = *(_xs.at(0).get());
-  bc_x -= *_trial_variables.Get(test_var_name);
-  bc_x /= _dt_coef.constant;
+  //mfem::Vector bc_x = *(_xs.at(0).get());
+  //bc_x -= *_trial_variables.Get(test_var_name);
+  //bc_x /= _dt_coef.constant;
 
   // Form linear system for operator acting on vector of du/dt
   mfem::OperatorPtr aux_a;
-  td_blf->FormLinearSystem(_ess_tdof_lists.at(0), bc_x, *lf, aux_a, aux_x, aux_rhs);
+  td_blf->FormLinearSystem(_ess_tdof_lists.at(0), *(_dxdts.at(0)), *lf, aux_a, aux_x, aux_rhs);
 
   truedXdt.GetBlock(0) = aux_x;
   trueRHS.GetBlock(0) = aux_rhs;
