@@ -266,6 +266,36 @@ EquationSystem::BuildJacobian(mfem::BlockVector & trueX, mfem::BlockVector & tru
 
 void CopyVec(const mfem::Vector & x, mfem::Vector & y){ y = x;}
 
+void
+EquationSystem::UpdateJacobian() const
+{
+
+  for (int i = 0; i < _test_var_names.size(); i++)
+    {
+      auto & test_var_name = _test_var_names.at(i);
+      auto blf = _blfs.Get(test_var_name);
+      blf->Update();
+      blf->Assemble();
+    }
+
+    // Form off-diagonal blocks
+    for (int i = 0; i < _test_var_names.size(); i++)
+    {
+      auto test_var_name = _test_var_names.at(i);
+      for (int j = 0; j < _test_var_names.size(); j++)
+      {
+        auto trial_var_name = _test_var_names.at(j);
+        if (_mblfs.Has(test_var_name) && _mblfs.Get(test_var_name)->Has(trial_var_name))
+        {
+          auto mblf = _mblfs.Get(test_var_name)->Get(trial_var_name);
+          mblf->Update();
+          mblf->Assemble();
+        }
+      }
+    }
+}
+
+
 void applyDirchValues(const mfem::Vector &k, mfem::Vector &y, mfem::Array<int> dofs)
 {
   if(dofs.Size() > 0){ //Only apply if there are constrained DOF's
@@ -319,6 +349,7 @@ EquationSystem::Mult(const mfem::Vector & x, mfem::Vector & residual) const
     _gfuncs->Get(trial_var_name)->Distribute(&(_trueBlockX.GetBlock(i)));
   }
 
+  UpdateJacobian();
   FormLinearSystem(_jacobian,  _trueBlockX,  _trueBlockRHS);
   _jacobian->Mult(_trueBlockX, residual);
   x.HostRead();
@@ -336,6 +367,7 @@ TimeDependentEquationSystem::Mult(const mfem::Vector &  dXdt, mfem::Vector & res
     _gfuncs->Get(trial_var_name)->Distribute(&(_trueBlockdXdt.GetBlock(i)));
   }
 
+  UpdateJacobian();
   FormLinearSystem(_jacobian,  _trueBlockdXdt,  _trueBlockRHS);
   _jacobian->Mult(_trueBlockX, residual);
   dXdt.HostRead();
@@ -613,10 +645,6 @@ TimeDependentEquationSystem::FormLegacySystem(mfem::OperatorHandle & op,
     blf->AddMult(*_trial_variables.Get(test_var_name), *lf, -1.0);
     // }
     mfem::Vector aux_x, aux_rhs;
-    // Update solution values on Dirichlet values to be in terms of du/dt instead of u
-    //mfem::Vector bc_x = *(_xs.at(i).get());
-    //bc_x -= *_trial_variables.Get(test_var_name);
-    //bc_x /= _dt_coef.constant;
 
     // Form linear system for operator acting on vector of du/dt
     mfem::HypreParMatrix * aux_a = new mfem::HypreParMatrix;
@@ -651,10 +679,6 @@ TimeDependentEquationSystem::FormSystem(mfem::OperatorHandle & op,
   *lf -= lf_prev;
   // }
   mfem::Vector aux_x, aux_rhs;
-  // Update solution values on Dirichlet values to be in terms of du/dt instead of u
-  //mfem::Vector bc_x = *(_xs.at(0).get());
-  //bc_x -= *_trial_variables.Get(test_var_name);
-  //bc_x /= _dt_coef.constant;
 
   // Form linear system for operator acting on vector of du/dt
   mfem::OperatorPtr aux_a;

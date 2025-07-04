@@ -67,6 +67,8 @@ public:
                                 mfem::BlockVector & trueX,
                                 mfem::BlockVector & trueRHS) const;
 
+  void UpdateJacobian() const;
+
   // Build linear system, with essential boundary conditions accounted for
   virtual void BuildJacobian(mfem::BlockVector & trueX, mfem::BlockVector & trueRHS);
 
