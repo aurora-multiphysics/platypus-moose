@@ -19,7 +19,7 @@ namespace Moose::MFEM
 EquationSystem::~EquationSystem() { DeleteAllBlocks(); }
 
 void
-EquationSystem::DeleteAllBlocks()
+EquationSystem::DeleteAllBlocks() const
 {
   for (const auto i : make_range(_h_blocks.NumRows()))
     for (const auto j : make_range(_h_blocks.NumCols()))
@@ -154,7 +154,7 @@ EquationSystem::ApplyEssentialBCs()
 void
 EquationSystem::FormLinearSystem(mfem::OperatorHandle & op,
                                  mfem::BlockVector & trueX,
-                                 mfem::BlockVector & trueRHS)
+                                 mfem::BlockVector & trueRHS) const
 {
 
   switch (_assembly_level)
@@ -175,7 +175,7 @@ EquationSystem::FormLinearSystem(mfem::OperatorHandle & op,
 void
 EquationSystem::FormSystem(mfem::OperatorHandle & op,
                            mfem::BlockVector & trueX,
-                           mfem::BlockVector & trueRHS)
+                           mfem::BlockVector & trueRHS) const
 {
   auto & test_var_name = _test_var_names.at(0);
   auto blf = _blfs.Get(test_var_name);
@@ -197,7 +197,7 @@ EquationSystem::FormSystem(mfem::OperatorHandle & op,
 void
 EquationSystem::FormLegacySystem(mfem::OperatorHandle & op,
                                  mfem::BlockVector & trueX,
-                                 mfem::BlockVector & trueRHS)
+                                 mfem::BlockVector & trueRHS) const
 {
 
   // Allocate block operator
@@ -319,24 +319,26 @@ EquationSystem::Mult(const mfem::Vector & x, mfem::Vector & residual) const
     _gfuncs->Get(trial_var_name)->Distribute(&(_trueBlockX.GetBlock(i)));
   }
 
+  FormLinearSystem(_jacobian,  _trueBlockX,  _trueBlockRHS);
   _jacobian->Mult(_trueBlockX, residual);
   x.HostRead();
   residual.HostRead();
 }
 
 void
-TimeDependentEquationSystem::Mult(const mfem::Vector & x, mfem::Vector & residual) const
+TimeDependentEquationSystem::Mult(const mfem::Vector &  dXdt, mfem::Vector & residual) const
 {
-  CopyVec(x,_trueBlockX);
+  CopyVec(dXdt,_trueBlockdXdt);
   for (int i = 0; i < _trial_var_names.size(); i++)
   {
     auto & trial_var_name = _trial_var_names.at(i);
-    applyDirchValues(*(_dxdts.at(i)), _trueBlockX.GetBlock(i), _ess_tdof_lists.at(i));
-    _gfuncs->Get(trial_var_name)->Distribute(&(_trueBlockX.GetBlock(i)));
+    applyDirchValues(*(_dxdts.at(i)), _trueBlockdXdt.GetBlock(i), _ess_tdof_lists.at(i));
+    _gfuncs->Get(trial_var_name)->Distribute(&(_trueBlockdXdt.GetBlock(i)));
   }
 
+  FormLinearSystem(_jacobian,  _trueBlockdXdt,  _trueBlockRHS);
   _jacobian->Mult(_trueBlockX, residual);
-  x.HostRead();
+  dXdt.HostRead();
   residual.HostRead();
 }
 
@@ -593,7 +595,7 @@ TimeDependentEquationSystem::BuildBilinearForms()
 void
 TimeDependentEquationSystem::FormLegacySystem(mfem::OperatorHandle & op,
                                               mfem::BlockVector & truedXdt,
-                                              mfem::BlockVector & trueRHS)
+                                              mfem::BlockVector & trueRHS) const
 {
 
   // Allocate block operator
@@ -634,7 +636,7 @@ TimeDependentEquationSystem::FormLegacySystem(mfem::OperatorHandle & op,
 void
 TimeDependentEquationSystem::FormSystem(mfem::OperatorHandle & op,
                                         mfem::BlockVector & truedXdt,
-                                        mfem::BlockVector & trueRHS)
+                                        mfem::BlockVector & trueRHS) const
 {
   auto & test_var_name = _test_var_names.at(0);
   auto td_blf = _td_blfs.Get(test_var_name);
