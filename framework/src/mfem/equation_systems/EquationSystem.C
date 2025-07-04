@@ -129,10 +129,8 @@ EquationSystem::ApplyEssentialBCs()
     mfem::ParGridFunction & trial_gf(*(_xs.at(i)));
     auto * const pmesh = _test_pfespaces.at(i)->GetParMesh();
     mooseAssert(pmesh, "parallel mesh is null");
-<<<<<<< HEAD
-=======
+    
     trial_gf = 0.0;
->>>>>>> 98f40dea03 (delete resetting dxdts to zero)
 
     auto bcs = _essential_bc_map.GetRef(test_var_name);
     mfem::Array<int> global_ess_markers(pmesh->bdr_attributes.Max());
@@ -362,6 +360,7 @@ EquationSystem::Mult(const mfem::Vector & x, mfem::Vector & residual) const
   _jacobian->Mult(_trueBlockX, residual);
   x.HostRead();
   residual.HostRead();
+  residual -= _trueBlockRHS;
 }
 
 void
@@ -388,6 +387,7 @@ TimeDependentEquationSystem::Mult(const mfem::Vector &  dXdt, mfem::Vector & res
   _jacobian->Mult(_trueBlockX, residual);
   dXdt.HostRead();
   residual.HostRead();
+  residual -= _trueBlockRHS;
 }
 
 mfem::Operator &
