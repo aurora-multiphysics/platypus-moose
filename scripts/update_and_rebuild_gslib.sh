@@ -68,6 +68,11 @@ if [ "$skip_sub_update" -eq 1 ]; then
   git submodule update --init
 fi
 
+# Default to -O2 and enable PIC
+prepend_flags="-O2 -fPIC"
+cflags="$prepend_flags ${CFLAGS:-""}"
+fflags="$prepend_flags ${FFLAGS:-""}"
+
 # Build and install gslib
 cd "$GSLIB_SRC_DIR"
-DESTDIR="$GSLIB_DIR" make -j ${MOOSE_JOBS:-4}
+DESTDIR="$GSLIB_DIR" CFLAGS="$cflags" FFLAGS="$fflags" make -j ${MOOSE_JOBS:-4}
