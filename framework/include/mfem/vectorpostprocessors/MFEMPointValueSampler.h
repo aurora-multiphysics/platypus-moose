@@ -13,6 +13,8 @@
 
 #include "MFEMVectorPostprocessor.h"
 
+#include "mfem.hpp"
+
 /*
  * MFEM Postprocessor which samples values at points.
  */
@@ -24,6 +26,9 @@ public:
   MFEMPointValueSampler(const InputParameters & parameters);
 
   virtual void finalize() override {}
+
+private:
+  FindPointsGSLIB finder;
 };
 
 #endif // MFEM_ENABLED
