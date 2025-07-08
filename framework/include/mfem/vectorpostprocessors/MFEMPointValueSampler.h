@@ -24,6 +24,7 @@ public:
   static InputParameters validParams();
 
   MFEMPointValueSampler(const InputParameters & parameters);
+  ~MFEMPointValueSampler();
 
   virtual void finalize() override {}
 

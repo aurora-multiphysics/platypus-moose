@@ -12,6 +12,7 @@
 #pragma once
 
 #include "MFEMPointValueSampler.h"
+#include "MFEMProblem.h"
 
 InputParameters
 MFEMPointValueSampler::validParams()
@@ -29,5 +30,14 @@ MFEMPointValueSampler::validParams()
 
   return params;
 }
+
+MFEMPointValueSampler::MFEMPointValueSampler(const InputParameters & parameters)
+  : MFEMVectorPostprocessor(parameters), finder(this->comm().get())
+{
+  auto & mesh = this->getMFEMProblem().mesh().getMFEMParMesh();
+  finder.Setup(mesh);
+}
+
+MFEMPointValueSampler::~MFEMPointValueSampler() { finder.FreeData(); }
 
 #endif // MFEM_ENABLED
