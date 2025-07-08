@@ -28,7 +28,7 @@ public:
   virtual void finalize() override {}
 
 private:
-  FindPointsGSLIB finder;
+  mfem::FindPointsGSLIB finder;
 };
 
 #endif // MFEM_ENABLED
