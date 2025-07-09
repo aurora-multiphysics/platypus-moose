@@ -11,18 +11,18 @@
 
 #pragma once
 
-#include "MFEMPointValueSampler.h"
+#include "MFEMValueSamplerBase.h"
 #include "MFEMProblem.h"
 
 InputParameters
-MFEMPointValueSampler::validParams()
+MFEMValueSamplerBase::validParams()
 {
   InputParameters params = MFEMVectorPostprocessor::validParams();
 
   params.addRequiredCoupledVar(
       "variable", "The names of the variables that this VectorPostprocessor operates on");
   params.addParam<PostprocessorName>(
-      "scaling", 1.0, "The postprocessor that the variables are multiplied with");
+      "scaling", 1.0, "The value that the variables are multiplied with");
   params.addParam<bool>(
       "warn_discontinuous_face_values",
       true,
@@ -31,13 +31,13 @@ MFEMPointValueSampler::validParams()
   return params;
 }
 
-MFEMPointValueSampler::MFEMPointValueSampler(const InputParameters & parameters)
+MFEMValueSamplerBase::MFEMValueSamplerBase(const InputParameters & parameters)
   : MFEMVectorPostprocessor(parameters), finder(this->comm().get())
 {
   auto & mesh = this->getMFEMProblem().mesh().getMFEMParMesh();
   finder.Setup(mesh);
 }
 
-MFEMPointValueSampler::~MFEMPointValueSampler() { finder.FreeData(); }
+MFEMValueSamplerBase::~MFEMValueSamplerBase() { finder.FreeData(); }
 
 #endif // MFEM_ENABLED

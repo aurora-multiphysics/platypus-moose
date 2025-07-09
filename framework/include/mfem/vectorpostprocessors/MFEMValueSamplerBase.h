@@ -18,13 +18,13 @@
 /*
  * MFEM Postprocessor which samples values at points.
  */
-class MFEMPointValueSampler : public MFEMVectorPostprocessor
+class MFEMValueSamplerBase : public MFEMVectorPostprocessor
 {
 public:
   static InputParameters validParams();
 
-  MFEMPointValueSampler(const InputParameters & parameters);
-  ~MFEMPointValueSampler();
+  MFEMValueSamplerBase(const InputParameters & parameters);
+  ~MFEMValueSamplerBase();
 
   virtual void finalize() override {}
 
