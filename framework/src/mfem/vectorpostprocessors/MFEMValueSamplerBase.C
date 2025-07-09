@@ -19,25 +19,24 @@ MFEMValueSamplerBase::validParams()
 {
   InputParameters params = MFEMVectorPostprocessor::validParams();
 
-  params.addRequiredCoupledVar(
+  params.addRequiredParam<VariableName>(
       "variable", "The names of the variables that this VectorPostprocessor operates on");
-  params.addParam<PostprocessorName>(
-      "scaling", 1.0, "The value that the variables are multiplied with");
-  params.addParam<bool>(
-      "warn_discontinuous_face_values",
-      true,
-      "Whether to return a warning if a discontinuous variable is sampled on a face");
 
   return params;
 }
 
-MFEMValueSamplerBase::MFEMValueSamplerBase(const InputParameters & parameters)
-  : MFEMVectorPostprocessor(parameters), finder(this->comm().get())
+MFEMValueSamplerBase::MFEMValueSamplerBase(const InputParameters & parameters,
+                                           mfem::Vector && points)
+  : MFEMVectorPostprocessor(parameters),
+    _finder(this->comm().get()),
+    _points(std::move(points)),
+    _var_name(getParam<VariableName>("variable")),
+    _var(getMFEMProblem().getProblemData().gridfunctions.GetRef(_var_name))
 {
   auto & mesh = this->getMFEMProblem().mesh().getMFEMParMesh();
-  finder.Setup(mesh);
+  _finder.Setup(mesh);
 }
 
-MFEMValueSamplerBase::~MFEMValueSamplerBase() { finder.FreeData(); }
+MFEMValueSamplerBase::~MFEMValueSamplerBase() { _finder.FreeData(); }
 
 #endif // MFEM_ENABLED

@@ -13,6 +13,7 @@
 
 #include "MFEMVectorPostprocessor.h"
 
+#include "MooseTypes.h"
 #include "mfem.hpp"
 
 /*
@@ -23,13 +24,21 @@ class MFEMValueSamplerBase : public MFEMVectorPostprocessor
 public:
   static InputParameters validParams();
 
-  MFEMValueSamplerBase(const InputParameters & parameters);
-  ~MFEMValueSamplerBase();
+  MFEMValueSamplerBase(const InputParameters & parameters, mfem::Vector && points);
+  // mfem::FindPointsGSLIB's default copy constructor does not correctly handle
+  // the fdataD data member so make this class uncopyable
+  MFEMValueSamplerBase(const MFEMValueSamplerBase & other) = delete;
+  MFEMValueSamplerBase & operator=(const MFEMValueSamplerBase & other) = delete;
+  virtual ~MFEMValueSamplerBase();
 
   virtual void finalize() override {}
 
 private:
-  mfem::FindPointsGSLIB finder;
+  mfem::FindPointsGSLIB _finder;
+  mfem::Vector _points;
+
+  const VariableName & _var_name;
+  const mfem::GridFunction & _var;
 };
 
 #endif // MFEM_ENABLED
