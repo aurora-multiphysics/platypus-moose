@@ -21,8 +21,6 @@ MFEMPointValueSampler::validParams()
   params.addClassDescription("Sample an MFEM variable at specific points.");
   params.addRequiredParam<std::vector<Point>>(
       "points", "The points where you want to evaluate the variables");
-  params.addRequiredCoupledVar(
-      "variable", "The names of the variables that this VectorPostprocessor operates on");
 
   return params;
 }
