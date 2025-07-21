@@ -26,7 +26,7 @@ MFEMPointValueSampler::validParams()
 }
 
 MFEMPointValueSampler::MFEMPointValueSampler(const InputParameters & parameters)
-  : MFEMValueSamplerBase(parameters)
+  : MFEMValueSamplerBase(parameters, getParam<std::vector<Point>>("points"))
 {
 }
 

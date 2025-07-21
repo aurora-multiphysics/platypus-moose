@@ -14,7 +14,11 @@
 #include "MFEMVectorPostprocessor.h"
 
 #include "MooseTypes.h"
+#include "libmesh/point.h"
 #include "mfem.hpp"
+
+mfem::Vector points_to_mfem_vector(const std::vector<Point> & points,
+                                   mfem::Ordering::Type ordering);
 
 /*
  * MFEM Postprocessor which samples values at points.
@@ -26,7 +30,7 @@ class MFEMValueSamplerBase : public MFEMVectorPostprocessor
 public:
   static InputParameters validParams();
 
-  MFEMValueSamplerBase(const InputParameters & parameters, mfem::Vector && points, size_t num_points);
+  MFEMValueSamplerBase(const InputParameters & parameters, const std::vector<Point> & points);
   // mfem::FindPointsGSLIB's default copy constructor does not correctly handle
   // the fdataD data member so make this class uncopyable
   MFEMValueSamplerBase(const MFEMValueSamplerBase & other) = delete;
@@ -48,6 +52,10 @@ private:
 
   const VariableName & _var_name;
   const mfem::GridFunction & _var;
+
+  // VectorPostprocessor declared values - the values written to these are output
+  std::vector<std::reference_wrapper<VectorPostprocessorValue>> _declared_points;
+  const VectorPostprocessorValue & _declared_value;
 };
 
 #endif // MFEM_ENABLED

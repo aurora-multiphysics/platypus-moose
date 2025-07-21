@@ -9,50 +9,88 @@
 
 #ifdef MFEM_ENABLED
 
-#pragma once
-
 #include "MFEMValueSamplerBase.h"
 #include "MFEMProblem.h"
+
+mfem::Vector
+points_to_mfem_vector(const std::vector<Point> & points, mfem::Ordering::Type ordering)
+{
+  const unsigned int num_points = points.size();
+  const unsigned int num_dims = LIBMESH_DIM;
+  mfem::Vector mfem_points(num_points * num_dims);
+  for (unsigned int i_point = 0; i_point < num_points; i_point++)
+  {
+    for (unsigned int i_dim = 0; i_dim < num_dims; i_dim++)
+    {
+      size_t idx;
+      if (ordering == mfem::Ordering::byNODES)
+      {
+        idx = i_dim * num_points + i_point;
+      }
+      else // ordering == mfem::Ordering::byVDIM
+      {
+        idx = i_point * num_dims + i_dim;
+      }
+
+      mfem_points(idx) = points[i_point](i_dim);
+    }
+  }
+
+  return mfem_points;
+}
 
 InputParameters
 MFEMValueSamplerBase::validParams()
 {
   InputParameters params = MFEMVectorPostprocessor::validParams();
 
-  params.addRequiredParam<VariableName>(
+  params.addRequiredCoupledVar(
       "variable", "The names of the variables that this VectorPostprocessor operates on");
 
   return params;
 }
 
 MFEMValueSamplerBase::MFEMValueSamplerBase(const InputParameters & parameters,
-                                           mfem::Vector && points, size_t num_points)
+                                           const std::vector<Point> & points)
   : MFEMVectorPostprocessor(parameters),
     _finder(this->comm().get()),
-    _points(std::move(points)),
-    _interp_vals(points.Size()),
+    _points(points_to_mfem_vector(
+        points, this->getMFEMProblem().mesh().getMFEMParMesh().GetNodalFESpace()->GetOrdering())),
+    _interp_vals(points.size() * this->getMFEMProblem().mesh().getMFEMParMesh().SpaceDimension()),
     _var_name(getParam<VariableName>("variable")),
-    _var(getMFEMProblem().getProblemData().gridfunctions.GetRef(_var_name))
+    _var(getMFEMProblem().getProblemData().gridfunctions.GetRef(_var_name)),
+    _declared_value(this->declareVector(_var_name))
 {
+  // set up points vector
   auto & mesh = this->getMFEMProblem().mesh().getMFEMParMesh();
   _finder.Setup(mesh);
   const auto ordering =
       this->getMFEMProblem().mesh().getMFEMParMesh().GetNodalFESpace()->GetOrdering();
   _finder.FindPoints(_points, ordering);
-  // TODO: declareVector some points and value vectors
+
+  // declare points vectors for outputting
+  const auto dim = this->getMFEMProblem().mesh().getMFEMParMesh().SpaceDimension();
+  for (int i = 0; i < dim; i++)
+  {
+    _declared_points.push_back(this->declareVector("x_" + std::to_string(i)));
+  }
 }
 
-void MFEMValueSamplerBase::execute() {
+void
+MFEMValueSamplerBase::execute()
+{
   _finder.Interpolate(_var, _interp_vals);
 }
 
-void MFEMValueSamplerBase::finalize() {
-   if (_interp_vals.UseDevice())
-   {
-      _interp_vals.HostReadWrite();
-   }
-   _points.HostReadWrite();
-   //TODO: copy interpolated points to declared vectors
+void
+MFEMValueSamplerBase::finalize()
+{
+  if (_interp_vals.UseDevice())
+  {
+    _interp_vals.HostReadWrite();
+  }
+  _points.HostReadWrite();
+  // TODO: copy interpolated points to declared vectors
 }
 
 MFEMValueSamplerBase::~MFEMValueSamplerBase() { _finder.FreeData(); }

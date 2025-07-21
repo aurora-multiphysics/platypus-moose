@@ -17,41 +17,32 @@
 #include "MooseError.h"
 #include "MFEMProblem.h"
 
-mfem::Vector
+#include <vector>
+
+std::vector<Point>
 generateLinePoints(const Point & start_point,
                    const Point & end_point,
                    unsigned int num_points,
-                   unsigned int num_dims,
-                   mfem::Ordering::Type ordering)
+                   unsigned int num_dims)
 {
   if (LIBMESH_DIM != num_dims)
   {
     mooseError("In MFEMLineValueSampler: point dimension not equal to mesh dimension.");
   }
 
-  if (num_points < 2) {
-    mooseError("In MFEMLineValueSampler: line must have at least 2 points.");
+  if (num_points < 2)
+  {
+    mooseError("In MFEMLineValueSampler: line must have at least 2 points,"
+               "for single points use MFEMPointValueSampler.");
   }
 
   // initialize and populate vector with linearly-spaced points along line
-  mfem::Vector points(num_points * num_dims);
+  std::vector<Point> points(num_points);
   for (unsigned int i_point = 0; i_point < num_points; i_point++)
   {
-    for (unsigned int i_dim = 0; i_dim < num_dims; i_dim++) {
-      size_t idx;
-      if (ordering == mfem::Ordering::byNODES)
-      {
-        idx = i_dim * num_points + i_point;
-      }
-      else // ordering == mfem::Ordering::byVDIM
-      {
-        idx = i_point * num_dims + i_dim;
-      }
-
-      // fractional distance along line [0, 1]
-      Real t = static_cast<Real>(i_point) / static_cast<Real>(num_points - 1);
-      points(idx) = t*end_point(i_dim) + (1 - t) * start_point(i_dim);
-    }
+    // fractional distance along line [0, 1]
+    Real t = static_cast<Real>(i_point) / static_cast<Real>(num_points - 1);
+    points.push_back(t * end_point + (1 - t) * start_point);
   }
 
   return points;
@@ -75,15 +66,11 @@ MFEMLineValueSampler::validParams()
 }
 
 MFEMLineValueSampler::MFEMLineValueSampler(const InputParameters & parameters)
-  : MFEMValueSamplerBase(
-        parameters,
-        generateLinePoints(
-            getParam<Point>("start_point"),
-            getParam<Point>("end_point"),
-            getParam<unsigned int>("num_points"),
-            this->getMFEMProblem().mesh().dimension(),
-            this->getMFEMProblem().mesh().getMFEMParMesh().GetNodalFESpace()->GetOrdering()),
-        getParam<unsigned int>("num_points"))
+  : MFEMValueSamplerBase(parameters,
+                         generateLinePoints(getParam<Point>("start_point"),
+                                            getParam<Point>("end_point"),
+                                            getParam<unsigned int>("num_points"),
+                                            this->getMFEMProblem().mesh().dimension()))
 {
 }
 
