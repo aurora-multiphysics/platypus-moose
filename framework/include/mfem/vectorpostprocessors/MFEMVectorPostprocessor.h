@@ -24,8 +24,6 @@ public:
   static InputParameters validParams();
 
   MFEMVectorPostprocessor(const InputParameters & parameters);
-
-  virtual void finalize() override {}
 };
 
 #endif // MFEM_ENABLED

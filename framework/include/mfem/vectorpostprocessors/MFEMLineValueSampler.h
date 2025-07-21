@@ -18,12 +18,12 @@
 /*
  * MFEM Postprocessor which samples values at points.
  */
-class MFEMPointValueSampler : public MFEMValueSamplerBase
+class MFEMLineValueSampler : public MFEMValueSamplerBase
 {
 public:
   static InputParameters validParams();
 
-  MFEMPointValueSampler (const InputParameters & parameters);
+  MFEMLineValueSampler (const InputParameters & parameters);
 
 private:
   mfem::FindPointsGSLIB finder;

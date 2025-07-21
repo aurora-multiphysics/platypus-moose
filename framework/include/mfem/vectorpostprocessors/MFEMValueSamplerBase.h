@@ -18,24 +18,33 @@
 
 /*
  * MFEM Postprocessor which samples values at points.
+ *
+ * Subclasses should override validParams and provide and use the constructor.
  */
 class MFEMValueSamplerBase : public MFEMVectorPostprocessor
 {
 public:
   static InputParameters validParams();
 
-  MFEMValueSamplerBase(const InputParameters & parameters, mfem::Vector && points);
+  MFEMValueSamplerBase(const InputParameters & parameters, mfem::Vector && points, size_t num_points);
   // mfem::FindPointsGSLIB's default copy constructor does not correctly handle
   // the fdataD data member so make this class uncopyable
   MFEMValueSamplerBase(const MFEMValueSamplerBase & other) = delete;
   MFEMValueSamplerBase & operator=(const MFEMValueSamplerBase & other) = delete;
   virtual ~MFEMValueSamplerBase();
 
-  virtual void finalize() override {}
+  /** Perform the interpolation in FindPointsGSLIB.
+   */
+  virtual void execute() override;
+
+  /** Store the result of the interpolation.
+   */
+  virtual void finalize() override;
 
 private:
   mfem::FindPointsGSLIB _finder;
   mfem::Vector _points;
+  mfem::Vector _interp_vals;
 
   const VariableName & _var_name;
   const mfem::GridFunction & _var;
