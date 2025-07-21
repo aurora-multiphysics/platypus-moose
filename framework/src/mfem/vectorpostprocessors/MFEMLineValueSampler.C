@@ -9,8 +9,6 @@
 
 #ifdef MFEM_ENABLED
 
-#pragma once
-
 #include "MFEMLineValueSampler.h"
 
 #include "libmesh/point.h"
@@ -18,6 +16,8 @@
 #include "MFEMProblem.h"
 
 #include <vector>
+
+registerMooseObject("MooseApp", MFEMLineValueSampler);
 
 std::vector<Point>
 generateLinePoints(const Point & start_point,

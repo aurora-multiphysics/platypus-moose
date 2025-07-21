@@ -9,9 +9,9 @@
 
 #ifdef MFEM_ENABLED
 
-#pragma once
-
 #include "MFEMPointValueSampler.h"
+
+registerMooseObject("MooseApp", MFEMPointValueSampler);
 
 InputParameters
 MFEMPointValueSampler::validParams()
