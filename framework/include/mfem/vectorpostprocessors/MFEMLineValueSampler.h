@@ -7,7 +7,7 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#ifdef MFEM_ENABLED
+#ifdef MOOSE_MFEM_ENABLED
 
 #pragma once
 
@@ -29,4 +29,4 @@ private:
   mfem::FindPointsGSLIB finder;
 };
 
-#endif // MFEM_ENABLED
+#endif // MOOSE_MFEM_ENABLED
