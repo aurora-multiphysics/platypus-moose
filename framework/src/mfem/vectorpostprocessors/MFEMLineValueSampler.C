@@ -22,14 +22,8 @@ registerMooseObject("MooseApp", MFEMLineValueSampler);
 std::vector<Point>
 generateLinePoints(const Point & start_point,
                    const Point & end_point,
-                   unsigned int num_points,
-                   unsigned int num_dims)
+                   unsigned int num_points)
 {
-  if (LIBMESH_DIM != num_dims)
-  {
-    mooseError("In MFEMLineValueSampler: point dimension not equal to mesh dimension.");
-  }
-
   if (num_points < 2)
   {
     mooseError("In MFEMLineValueSampler: line must have at least 2 points,"
@@ -69,8 +63,7 @@ MFEMLineValueSampler::MFEMLineValueSampler(const InputParameters & parameters)
   : MFEMValueSamplerBase(parameters,
                          generateLinePoints(getParam<Point>("start_point"),
                                             getParam<Point>("end_point"),
-                                            getParam<unsigned int>("num_points"),
-                                            this->getMFEMProblem().mesh().dimension()))
+                                            getParam<unsigned int>("num_points")))
 {
 }
 
