@@ -15,7 +15,7 @@ InputParameters
 MFEMVectorPostprocessor::validParams()
 {
   InputParameters params = MFEMGeneralUserObject::validParams();
-  params += Postprocessor::validParams();
+  params += VectorPostprocessor::validParams();
   return params;
 }
 
