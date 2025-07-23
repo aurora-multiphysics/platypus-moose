@@ -1,6 +1,6 @@
 [Mesh]
   type = MFEMMesh
-  file = ../mesh/mug.e
+  file = ../../mesh/mug.e
   dim = 3
 []
 
@@ -107,12 +107,10 @@
 []
 
 [VectorPostprocessors]
-  [./line_sample]
-    type = MFEMLineValueSampler
+  [./point_sample]
+    type = MFEMPointValueSampler
     variable = 'concentration'
-    start_point = '2.125 0 -2.375'
-    end_point = '2.125 0 2.625'
-    num_points = 11
+    points = '2.125 0 -1.375  2.125 0 1.125'
   [../]
 []
 

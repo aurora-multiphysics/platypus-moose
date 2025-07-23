@@ -1,0 +1,11 @@
+[Tests]
+  [MFEMPointValueSampler]
+    type = CSVDiff
+    input = point_value_sampler.i
+    csvdiff = 'point_value_sampler_out_point_sample_0001.csv'
+    requirement = 'The system shall have the ability to interpolate at arbitrary points using MFEM.'
+    abs_zero = 1e-6
+    capabilities = 'mfem'
+    recover = false
+  []
+[]
