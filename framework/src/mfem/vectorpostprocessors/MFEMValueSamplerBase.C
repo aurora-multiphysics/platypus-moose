@@ -44,7 +44,7 @@ MFEMValueSamplerBase::validParams()
 {
   InputParameters params = MFEMVectorPostprocessor::validParams();
 
-  params.addRequiredCoupledVar(
+  params.addParam<VariableName>(
       "variable", "The names of the variables that this VectorPostprocessor operates on");
 
   return params;

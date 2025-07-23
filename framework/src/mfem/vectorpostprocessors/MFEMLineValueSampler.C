@@ -61,9 +61,11 @@ MFEMLineValueSampler::validParams()
 
 MFEMLineValueSampler::MFEMLineValueSampler(const InputParameters & parameters)
   : MFEMValueSamplerBase(parameters,
-                         generateLinePoints(getParam<Point>("start_point"),
-                                            getParam<Point>("end_point"),
-                                            getParam<unsigned int>("num_points")))
+                         // can't call getParam as that requires initialized base class
+                         // so calling parameters.get directly
+                         generateLinePoints(parameters.get<Point>("start_point"),
+                                            parameters.get<Point>("end_point"),
+                                            parameters.get<unsigned int>("num_points")))
 {
 }
 
