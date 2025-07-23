@@ -110,8 +110,8 @@
   [./line_sample]
     type = MFEMLineValueSampler
     variable = 'concentration'
-    start_point = '0 0.5 0'
-    end_point = '1 0.5 0'
+    start_point = '2.125 0 -2.375'
+    end_point = '2.125 0 2.625'
     num_points = 11
   [../]
 []

@@ -13,6 +13,8 @@
 #include "MFEMValueSamplerBase.h"
 #include "MFEMProblem.h"
 
+namespace
+{
 mfem::Vector
 points_to_mfem_vector(const std::vector<Point> & points, mfem::Ordering::Type ordering)
 {
@@ -40,6 +42,34 @@ points_to_mfem_vector(const std::vector<Point> & points, mfem::Ordering::Type or
   return mfem_points;
 }
 
+void
+mfem_vector_to_postprocessor_points(
+    const mfem::Vector & mfem_points,
+    std::vector<std::reference_wrapper<VectorPostprocessorValue>> & points,
+    mfem::Ordering::Type ordering)
+{
+  const unsigned int num_dims = LIBMESH_DIM;
+  const unsigned int num_points = mfem_points.Size() / num_dims;
+  for (unsigned int i_point = 0; i_point < num_points; i_point++)
+  {
+    for (unsigned int i_dim = 0; i_dim < num_dims; i_dim++)
+    {
+      size_t idx;
+      if (ordering == mfem::Ordering::byNODES)
+      {
+        idx = i_dim * num_points + i_point;
+      }
+      else // ordering == mfem::Ordering::byVDIM
+      {
+        idx = i_point * num_dims + i_dim;
+      }
+
+      points[i_dim].get()[i_point] = mfem_points(idx);
+    }
+  }
+}
+}
+
 InputParameters
 MFEMValueSamplerBase::validParams()
 {
@@ -61,10 +91,10 @@ MFEMValueSamplerBase::MFEMValueSamplerBase(const InputParameters & parameters,
     _points_ordering(getParam<MooseEnum>("point_ordering") == "NODES" ? mfem::Ordering::byNODES
                                                                       : mfem::Ordering::byVDIM),
     _points(points_to_mfem_vector(points, _points_ordering)),
-    _interp_vals(points.size() * this->getMFEMProblem().mesh().getMFEMParMesh().SpaceDimension()),
+    _interp_vals(points.size()),
     _var_name(getParam<VariableName>("variable")),
     _var(getMFEMProblem().getProblemData().gridfunctions.GetRef(_var_name)),
-    _declared_value(this->declareVector(_var_name))
+    _declared_vals(this->declareVector(_var_name))
 {
   // set up points vector
   auto & mesh = this->getMFEMProblem().mesh().getMFEMParMesh();
@@ -76,7 +106,10 @@ MFEMValueSamplerBase::MFEMValueSamplerBase(const InputParameters & parameters,
   const auto dim = this->getMFEMProblem().mesh().getMFEMParMesh().SpaceDimension();
   for (int i = 0; i < dim; i++)
   {
-    _declared_points.push_back(this->declareVector("x_" + std::to_string(i)));
+    std::reference_wrapper<VectorPostprocessorValue> declared_dim =
+        this->declareVector("x_" + std::to_string(i));
+    declared_dim.get().resize(points.size());
+    _declared_points.push_back(declared_dim);
   }
 }
 
@@ -95,6 +128,8 @@ MFEMValueSamplerBase::finalize()
   }
   _points.HostReadWrite();
   // TODO: copy interpolated points to declared vectors
+  mfem_vector_to_postprocessor_points(_points, _declared_points, _points_ordering);
+  _declared_vals.assign(_interp_vals.begin(), _interp_vals.end());
 }
 
 MFEMValueSamplerBase::~MFEMValueSamplerBase() { _finder.FreeData(); }

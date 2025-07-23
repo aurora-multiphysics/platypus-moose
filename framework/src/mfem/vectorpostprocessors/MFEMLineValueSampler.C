@@ -19,10 +19,10 @@
 
 registerMooseObject("MooseApp", MFEMLineValueSampler);
 
+namespace
+{
 std::vector<Point>
-generateLinePoints(const Point & start_point,
-                   const Point & end_point,
-                   unsigned int num_points)
+generateLinePoints(const Point & start_point, const Point & end_point, unsigned int num_points)
 {
   if (num_points < 2)
   {
@@ -31,7 +31,8 @@ generateLinePoints(const Point & start_point,
   }
 
   // initialize and populate vector with linearly-spaced points along line
-  std::vector<Point> points(num_points);
+  std::vector<Point> points;
+  points.reserve(num_points);
   for (unsigned int i_point = 0; i_point < num_points; i_point++)
   {
     // fractional distance along line [0, 1]
@@ -40,6 +41,7 @@ generateLinePoints(const Point & start_point,
   }
 
   return points;
+}
 }
 
 InputParameters

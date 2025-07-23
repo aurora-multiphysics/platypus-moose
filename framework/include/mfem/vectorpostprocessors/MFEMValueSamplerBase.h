@@ -17,9 +17,6 @@
 #include "libmesh/point.h"
 #include "mfem.hpp"
 
-mfem::Vector points_to_mfem_vector(const std::vector<Point> & points,
-                                   mfem::Ordering::Type ordering);
-
 /*
  * MFEM Postprocessor which samples values at points.
  *
@@ -56,7 +53,7 @@ private:
 
   // VectorPostprocessor declared values - the values written to these are output
   std::vector<std::reference_wrapper<VectorPostprocessorValue>> _declared_points;
-  const VectorPostprocessorValue & _declared_value;
+  VectorPostprocessorValue & _declared_vals;
 };
 
 #endif // MOOSE_MFEM_ENABLED
