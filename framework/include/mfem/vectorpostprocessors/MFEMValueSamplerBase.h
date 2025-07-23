@@ -47,6 +47,7 @@ public:
 
 private:
   mfem::FindPointsGSLIB _finder;
+  mfem::Ordering::Type _points_ordering;
   mfem::Vector _points;
   mfem::Vector _interp_vals;
 

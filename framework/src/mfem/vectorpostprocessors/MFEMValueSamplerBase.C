@@ -7,6 +7,7 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
+#include "mfem/fem/fespace.hpp"
 #ifdef MOOSE_MFEM_ENABLED
 
 #include "MFEMValueSamplerBase.h"
@@ -44,8 +45,11 @@ MFEMValueSamplerBase::validParams()
 {
   InputParameters params = MFEMVectorPostprocessor::validParams();
 
-  params.addParam<VariableName>(
+  params.addRequiredParam<VariableName>(
       "variable", "The names of the variables that this VectorPostprocessor operates on");
+  MooseEnum ordering("NODES VDIM", "VDIM", false);
+  params.addParam<MooseEnum>(
+      "point_ordering", ordering, "Ordering style to use for point vector DoFs.");
 
   return params;
 }
@@ -54,8 +58,9 @@ MFEMValueSamplerBase::MFEMValueSamplerBase(const InputParameters & parameters,
                                            const std::vector<Point> & points)
   : MFEMVectorPostprocessor(parameters),
     _finder(this->comm().get()),
-    _points(points_to_mfem_vector(
-        points, this->getMFEMProblem().mesh().getMFEMParMesh().GetNodalFESpace()->GetOrdering())),
+    _points_ordering(getParam<MooseEnum>("point_ordering") == "NODES" ? mfem::Ordering::byNODES
+                                                                      : mfem::Ordering::byVDIM),
+    _points(points_to_mfem_vector(points, _points_ordering)),
     _interp_vals(points.size() * this->getMFEMProblem().mesh().getMFEMParMesh().SpaceDimension()),
     _var_name(getParam<VariableName>("variable")),
     _var(getMFEMProblem().getProblemData().gridfunctions.GetRef(_var_name)),
@@ -63,10 +68,9 @@ MFEMValueSamplerBase::MFEMValueSamplerBase(const InputParameters & parameters,
 {
   // set up points vector
   auto & mesh = this->getMFEMProblem().mesh().getMFEMParMesh();
+  mesh.EnsureNodes();
   _finder.Setup(mesh);
-  const auto ordering =
-      this->getMFEMProblem().mesh().getMFEMParMesh().GetNodalFESpace()->GetOrdering();
-  _finder.FindPoints(_points, ordering);
+  _finder.FindPoints(_points, _points_ordering);
 
   // declare points vectors for outputting
   const auto dim = this->getMFEMProblem().mesh().getMFEMParMesh().SpaceDimension();
