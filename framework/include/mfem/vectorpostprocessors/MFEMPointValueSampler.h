@@ -24,9 +24,6 @@ public:
   static InputParameters validParams();
 
   MFEMPointValueSampler (const InputParameters & parameters);
-
-private:
-  mfem::FindPointsGSLIB finder;
 };
 
 #endif // MOOSE_MFEM_ENABLED
