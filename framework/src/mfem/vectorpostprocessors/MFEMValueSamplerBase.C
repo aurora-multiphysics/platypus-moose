@@ -15,8 +15,25 @@
 
 namespace
 {
+size_t
+mfem_index(const size_t i_dim,
+           const size_t i_point,
+           const size_t num_dims,
+           const size_t num_points,
+           const mfem::Ordering::Type ordering)
+{
+  if (ordering == mfem::Ordering::byNODES)
+  {
+    return i_dim * num_points + i_point;
+  }
+  else // ordering == mfem::Ordering::byVDIM
+  {
+    return i_point * num_dims + i_dim;
+  }
+}
+
 mfem::Vector
-points_to_mfem_vector(const std::vector<Point> & points, mfem::Ordering::Type ordering)
+points_to_mfem_vector(const std::vector<Point> & points, const mfem::Ordering::Type ordering)
 {
   const unsigned int num_points = points.size();
   const unsigned int num_dims = LIBMESH_DIM;
@@ -25,15 +42,7 @@ points_to_mfem_vector(const std::vector<Point> & points, mfem::Ordering::Type or
   {
     for (unsigned int i_dim = 0; i_dim < num_dims; i_dim++)
     {
-      size_t idx;
-      if (ordering == mfem::Ordering::byNODES)
-      {
-        idx = i_dim * num_points + i_point;
-      }
-      else // ordering == mfem::Ordering::byVDIM
-      {
-        idx = i_point * num_dims + i_dim;
-      }
+      const size_t idx = mfem_index(i_dim, i_point, num_dims, num_points, ordering);
 
       mfem_points(idx) = points[i_point](i_dim);
     }
@@ -46,7 +55,7 @@ void
 mfem_vector_to_postprocessor_points(
     const mfem::Vector & mfem_points,
     std::vector<std::reference_wrapper<VectorPostprocessorValue>> & points,
-    mfem::Ordering::Type ordering)
+    const mfem::Ordering::Type ordering)
 {
   const unsigned int num_dims = LIBMESH_DIM;
   const unsigned int num_points = mfem_points.Size() / num_dims;
@@ -54,15 +63,7 @@ mfem_vector_to_postprocessor_points(
   {
     for (unsigned int i_dim = 0; i_dim < num_dims; i_dim++)
     {
-      size_t idx;
-      if (ordering == mfem::Ordering::byNODES)
-      {
-        idx = i_dim * num_points + i_point;
-      }
-      else // ordering == mfem::Ordering::byVDIM
-      {
-        idx = i_point * num_dims + i_dim;
-      }
+      const size_t idx = mfem_index(i_dim, i_point, num_dims, num_points, ordering);
 
       points[i_dim].get()[i_point] = mfem_points(idx);
     }
@@ -127,7 +128,7 @@ MFEMValueSamplerBase::finalize()
     _interp_vals.HostReadWrite();
   }
   _points.HostReadWrite();
-  // TODO: copy interpolated points to declared vectors
+
   mfem_vector_to_postprocessor_points(_points, _declared_points, _points_ordering);
   _declared_vals.assign(_interp_vals.begin(), _interp_vals.end());
 }
