@@ -94,8 +94,7 @@ MFEMValueSamplerBase::MFEMValueSamplerBase(const InputParameters & parameters,
     _points(points_to_mfem_vector(points, _points_ordering)),
     _interp_vals(points.size()),
     _var_name(getParam<VariableName>("variable")),
-    _var(getMFEMProblem().getProblemData().gridfunctions.GetRef(_var_name)),
-    _declared_vals(this->declareVector(_var_name))
+    _var(getMFEMProblem().getProblemData().gridfunctions.GetRef(_var_name))
 {
   // set up points vector
   auto & mesh = this->getMFEMProblem().mesh().getMFEMParMesh();
@@ -104,13 +103,23 @@ MFEMValueSamplerBase::MFEMValueSamplerBase(const InputParameters & parameters,
   _finder.FindPoints(_points, _points_ordering);
 
   // declare points vectors for outputting
-  const auto dim = this->getMFEMProblem().mesh().getMFEMParMesh().SpaceDimension();
-  for (int i = 0; i < dim; i++)
+  const auto mesh_dim = this->getMFEMProblem().mesh().getMFEMParMesh().SpaceDimension();
+  for (int i = 0; i < mesh_dim; i++)
   {
     std::reference_wrapper<VectorPostprocessorValue> declared_dim =
         this->declareVector("x_" + std::to_string(i));
     declared_dim.get().resize(points.size());
     _declared_points.push_back(declared_dim);
+  }
+
+  // declare value vectors for outputting
+  const auto val_dim = _var.VectorDim();
+  for (int i = 0; i < val_dim; i++)
+  {
+    std::reference_wrapper<VectorPostprocessorValue> declared_dim =
+        this->declareVector(_var_name + "_" + std::to_string(i));
+    declared_dim.get().resize(points.size());
+    _declared_vals.push_back(declared_dim);
   }
 }
 
@@ -130,7 +139,17 @@ MFEMValueSamplerBase::finalize()
   _points.HostReadWrite();
 
   mfem_vector_to_postprocessor_points(_points, _declared_points, _points_ordering);
-  _declared_vals.assign(_interp_vals.begin(), _interp_vals.end());
+  const auto val_dims = _var.VectorDim();
+  const auto num_points = _declared_points[0].get().size();
+  const auto val_fespace_ordering = _var.FESpace()->GetOrdering();
+  for (int i_dim = 0; i_dim < val_dims; i_dim++)
+  {
+    for (size_t i_point = 0; i_point < num_points; i_point++)
+    {
+      const auto mfem_idx = mfem_index(i_dim, i_point, val_dims, num_points, val_fespace_ordering);
+      _declared_vals[i_dim].get()[i_point] = _interp_vals[mfem_idx];
+    }
+  }
 }
 
 MFEMValueSamplerBase::~MFEMValueSamplerBase() { _finder.FreeData(); }

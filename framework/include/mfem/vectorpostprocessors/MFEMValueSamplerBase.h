@@ -53,7 +53,7 @@ private:
 
   // VectorPostprocessor declared values - the values written to these are output
   std::vector<std::reference_wrapper<VectorPostprocessorValue>> _declared_points;
-  VectorPostprocessorValue & _declared_vals;
+  std::vector<std::reference_wrapper<VectorPostprocessorValue>> _declared_vals;
 };
 
 #endif // MOOSE_MFEM_ENABLED
