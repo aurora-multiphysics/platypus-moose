@@ -96,6 +96,10 @@ MFEMValueSamplerBase::MFEMValueSamplerBase(const InputParameters & parameters,
     _var_name(getParam<VariableName>("variable")),
     _var(getMFEMProblem().getProblemData().gridfunctions.GetRef(_var_name))
 {
+  if (this->getMFEMProblem().mesh().shouldDisplace()) {
+    mooseError("MFEMValueSamplerBase does not yet support problems with displacement.");
+  }
+
   // set up points vector
   auto & mesh = this->getMFEMProblem().mesh().getMFEMParMesh();
   mesh.EnsureNodes();
