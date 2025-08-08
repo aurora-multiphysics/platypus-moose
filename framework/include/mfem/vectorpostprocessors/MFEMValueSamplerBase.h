@@ -30,6 +30,7 @@ public:
   MFEMValueSamplerBase(const InputParameters & parameters, const std::vector<Point> & points);
   // mfem::FindPointsGSLIB's default copy constructor does not correctly handle
   // the fdataD data member so make this class uncopyable
+  // https://github.com/mfem/mfem/issues/4930
   MFEMValueSamplerBase(const MFEMValueSamplerBase & other) = delete;
   MFEMValueSamplerBase & operator=(const MFEMValueSamplerBase & other) = delete;
   virtual ~MFEMValueSamplerBase();
